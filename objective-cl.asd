@@ -8,4 +8,4 @@
 (defsystem :objective-cl
   :license "BSD-3-Clause"
   :components
-  ((:file "source")))
+  ((:file "objective-cl")))
