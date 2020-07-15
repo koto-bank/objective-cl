@@ -51,9 +51,12 @@
 
 (defmacro enable ()
   `(eval-when (:compile-toplevel :execute)
-     (setf *original-readtable* (copy-readtable))
-     (set-macro-character #\[ #'br-reader)))
+     (unless *original-readtable*
+       (setf *original-readtable* (copy-readtable))
+       (set-macro-character #\[ #'br-reader))))
 
 (defmacro disable ()
   `(eval-when (:compile-toplevel :execute)
-     (setf *readtable* *original-readtable*)))
+     (when *original-readtable*
+       (setf *readtable* *original-readtable*
+             *original-readtable* nil))))
