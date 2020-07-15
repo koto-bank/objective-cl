@@ -1,3 +1,11 @@
+(defpackage :objective-cl
+  (:use :cl)
+  (:export
+   :enable
+   :disable))
+
+(in-package :objective-cl)
+
 (defun make-slot-access (symbol)
   (unless (symbolp symbol)
     (return-from make-slot-access symbol))
@@ -28,12 +36,24 @@
 (defun br-reader (stream char)
   (declare (ignore char))
   (let ((*readtable* (copy-readtable)))
-    (set-macro-character #\] (lambda (stream char)
-                               (declare (ignore stream char))))
+    (set-macro-character #\]
+                         (lambda (stream char)
+                           (declare (ignore stream char))))
     (let ((form (loop
-                  :for form := (read steam nil nil t)
-                  :while form :collect form)))
+                   :for form := (read stream nil nil t)
+                   :while form :collect form)))
       (cond ((null form) nil)
             ((= 1 (length form)) (make-slot-access (car form)))
             (t (mapcar #'make-slot-access
                        `(,(second form) ,(first form) ,@(cddr form))))))))
+
+(defvar *original-readtable* (copy-readtable))
+
+(defmacro enable ()
+  `(eval-when (:compile-toplevel :execute)
+     (setf *original-readtable* (copy-readtable))
+     (set-macro-character #\[ #'br-reader)))
+
+(defmacro disable ()
+  `(eval-when (:compile-toplevel :execute)
+     (setf *readtable* *original-readtable*)))
