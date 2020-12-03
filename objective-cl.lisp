@@ -48,13 +48,13 @@
             (t (mapcar #'make-slot-access
                        `(,(second form) ,(first form) ,@(cddr form))))))))
 
-(defreadtable ocl-readtable
+(named-readtables:defreadtable ocl-readtable
   (:merge :standard)
   (:case :upcase)
   (:macro-char #\[ #'br-reader))
 
-(defmacro enable ()
-  '(named-readtables:in-readtable 'objective-cl:ocl-readtable))
+(defun enable ()
+  (named-readtables:in-readtable ocl-readtable))
 
-(defmacro disable ()
-  '(named-readtables:in-readtable 'standard))
+(defun disable ()
+  (named-readtables:in-readtable standard))

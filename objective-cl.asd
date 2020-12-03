@@ -7,6 +7,6 @@
 
 (defsystem :objective-cl
   :license "BSD-3-Clause"
-  :components
   :depends-on (:named-readtables)
+  :components
   ((:file "objective-cl")))
