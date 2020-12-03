@@ -2,7 +2,8 @@
   (:use :cl)
   (:export
    :enable
-   :disable))
+   :disable
+   :ocl-readtable))
 
 (in-package :objective-cl)
 
@@ -47,16 +48,13 @@
             (t (mapcar #'make-slot-access
                        `(,(second form) ,(first form) ,@(cddr form))))))))
 
-(defvar *original-readtable* (copy-readtable))
+(defreadtable ocl-readtable
+  (:merge :standard)
+  (:case :upcase)
+  (:macro-char #\[ #'br-reader))
 
 (defmacro enable ()
-  `(eval-when (:compile-toplevel :execute)
-     (unless *original-readtable*
-       (setf *original-readtable* (copy-readtable))
-       (set-macro-character #\[ #'br-reader))))
+  '(named-readtables:in-readtable 'objective-cl:ocl-readtable))
 
 (defmacro disable ()
-  `(eval-when (:compile-toplevel :execute)
-     (when *original-readtable*
-       (setf *readtable* *original-readtable*
-             *original-readtable* nil))))
+  '(named-readtables:in-readtable 'standard))
