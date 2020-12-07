@@ -68,4 +68,24 @@ Installation
 Copy (or symlink) to `~/quicklisp/local-projects`, then type `(ql:register-local-projects)` in the REPL.
 Or just copy the file `objective-cl.lisp` straight into your project.
 
+Usage
+---
+
+To enable the extension for all project, use `:around-compile` attribute:
+```lisp
+(asdf:defsystem :your-awesome-system
+  :license "Your favourite license"
+  :depends-on (:<...>
+               :objective-cl)
+  :around-compile (lambda (next)
+                    ;; uiop:symbol-call is needed because objective-cl system
+                    ;; is not yet loaded by the time the defsystem form is read,
+                    ;; so the package also doesn't exists, which causes an error
+                    (uiop:symbol-call '#:objective-cl '#:enable)
+                    (funcall next))
+  :components
+  ((:file "packages")
+    <...>
+```
+
 Please use responsibly.
