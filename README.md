@@ -82,7 +82,8 @@ To enable the extension for all project, use `:around-compile` attribute:
                     ;; is not yet loaded by the time the defsystem form is read,
                     ;; so the package also doesn't exists, which causes an error
                     (uiop:symbol-call '#:objective-cl '#:enable)
-                    (funcall next))
+                    (unwind-protect (funcall next)
+                      (uiop:symbol-call '#:objective-cl '#:disable)))
   :components
   ((:file "packages")
     <...>
