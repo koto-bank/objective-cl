@@ -57,4 +57,4 @@
   (named-readtables:in-readtable ocl-readtable))
 
 (defun disable ()
-  (named-readtables:in-readtable standard))
+  (named-readtables:in-readtable :standard))
