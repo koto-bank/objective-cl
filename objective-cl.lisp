@@ -7,32 +7,24 @@
 
 (in-package :objective-cl)
 
-(defun make-slot-access (symbol)
-  (unless (symbolp symbol)
-    (return-from make-slot-access symbol))
-  (let* ((str (string symbol))
-         (parsing-obj t)
-         (obj "")
-         (start 0)
-         (slots (list)))
-    (loop
-      :for c :across str
-      :for n :from 0
-      :do (when (char= c #\.)
-            (if parsing-obj
-              (setf parsing-obj nil
-                    obj (subseq str 0 n)
-                    start (1+ n))
-              (progn
-                (push (subseq str start n) slots)
-                (setf start (1+ n))))))
-    (if parsing-obj symbol
-      (progn (push (subseq str start) slots)
-             (reduce
-              (lambda (acc elem)
-                `(slot-value ,acc ',elem))
-              (reverse (mapcar 'intern slots))
-              :initial-value (intern obj))))))
+(defun parse-form (subform rest parsed-form)
+  (when (null subform)
+    (return-from parse-form (nreverse parsed-form)))
+  (if (atom subform)
+    (cond ((eq 'slot-access subform)
+           (let ((object (car parsed-form))
+                 (slot (car rest))
+                 (new-rest (cdr rest)))
+             (parse-form (car new-rest) (cdr new-rest)
+                         (cons (list 'slot-value object `(quote ,slot))
+                               (cdr parsed-form)))))
+          (t (parse-form (car rest) (cdr rest) (cons subform parsed-form))))
+    ;; else: subform is a list
+    (parse-form (car rest) (cdr rest)
+                (cons (parse-form (car subform)
+                                  (cdr subform)
+                                  list)
+                      parsed-form))))
 
 (defun br-reader (stream char)
   (declare (ignore char))
@@ -40,13 +32,19 @@
     (set-macro-character #\]
                          (lambda (stream char)
                            (declare (ignore stream char))))
-    (let ((form (loop
-                   :for form := (read stream nil nil t)
-                   :while form :collect form)))
+    (set-macro-character #\.
+                         (lambda (stream char)
+                           (declare (ignore stream char))
+                           'slot-access))
+    (let* ((raw (loop
+                  for form = (read stream nil nil t)
+                  while form
+                  collect form))
+           (form (parse-form (car raw) (cdr raw)
+                             (list))))
       (cond ((null form) nil)
-            ((= 1 (length form)) (make-slot-access (car form)))
-            (t (mapcar #'make-slot-access
-                       `(,(second form) ,(first form) ,@(cddr form))))))))
+            ((= 1 (length form)) (car form))
+            (t `(,(second form) ,(first form) ,@(cddr form)))))))
 
 (named-readtables:defreadtable ocl-readtable
   (:merge :standard)
