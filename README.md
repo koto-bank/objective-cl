@@ -62,6 +62,37 @@ CL-USER> (add-nums 1 2 3)
 6 (3 bits, #x6, #o6, #b110)
 ```
 
+Packages may be specified as usual for both slots and objects:
+```lisp
+CL-USER> (defpackage :bar (:use :cl)
+                     (:export :some-slot))
+#<PACKAGE "BAR">
+CL-USER> (in-package :bar)
+#<PACKAGE "BAR">
+BAR> (defclass some-class () (some-slot unexported-slot))
+#<STANDARD-CLASS BAR:SOME-CLASS>
+BAR> (defvar *an-instance* (make-instance 'some-class))
+*AN-INSTANCE*
+BAR> (in-package :cl-user)
+#<PACKAGE "COMMON-LISP-USER">
+CL-USER> [bar::*an-instance*.bar:some-slot setf 34]
+34 (6 bits, #x22, #o42, #b100010)
+CL-USER> (slot-value bar::*an-instance* 'bar:some-slot)
+34 (6 bits, #x22, #o42, #b100010)
+CL-USER> (read-from-string "[bar::*an-instance*.bar:some-slot]")
+(SLOT-VALUE BAR::*AN-INSTANCE* 'BAR:SOME-SLOT)
+CL-USER> [bar::*an-instance*.bar::unexported-slot setf 12]
+12 (4 bits, #xC, #o14, #b1100)
+CL-USER> (slot-value bar::*an-instance* 'bar::unexported-slot)
+12 (4 bits, #xC, #o14, #b1100)
+```
+
+Limitations
+---
+Since there's no way to tell "." in the package or variable name from the "." separating object and slot,
+variables and packages with "." in their names are not supported. For packages, this can be mitigated by
+using `:local-nicknames`. For slot names the usual `slot-value` must be used.
+
 Installation
 ---
 
