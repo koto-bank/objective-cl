@@ -23,7 +23,7 @@
     (parse-form (car rest) (cdr rest)
                 (cons (parse-form (car subform)
                                   (cdr subform)
-                                  list)
+                                  (list))
                       parsed-form))))
 
 (defun br-reader (stream char)
